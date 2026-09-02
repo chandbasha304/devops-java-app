@@ -1,0 +1,46 @@
+steps:
+  # Step 1: Compile and run unit tests with Maven
+  - name: 'maven:3.9.6-eclipse-temurin-17'
+    entrypoint: 'mvn'
+    args: ['clean', 'test']
+
+  # Step 2: Build the Docker container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:$BUILD_ID'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:latest'
+      - '.'
+
+  # Step 3: Push Docker image to Google Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app'
+
+  # Step 4: Deploy container to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'devops-java-app'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:$BUILD_ID'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

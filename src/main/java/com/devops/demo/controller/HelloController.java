@@ -17,9 +17,7 @@ public class HelloController {
     public ResponseEntity<Map<String, Object>> getGreeting() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "SUCCESS");
-
-        response.put("message", "Standard Production API Message");
-
+        response.put("message", "Welcome to the Unified DevOps API on Cloud Run!");
         response.put("version", "v1.0.0");
         response.put("timestamp", Instant.now().toString());
         return ResponseEntity.ok(response);

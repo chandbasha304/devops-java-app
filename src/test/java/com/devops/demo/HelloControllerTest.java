@@ -22,7 +22,7 @@ class HelloControllerTest {
         mockMvc.perform(get("/api/v1/hello"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("Welcome to the Unified DevOps API!"))
+                .andExpect(jsonPath("$.message").value("Welcome to the Unified DevOps API on Cloud Run!"))
                 .andExpect(jsonPath("$.version").value("v1.0.0"));
     }
 
