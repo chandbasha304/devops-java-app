@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Cloud Deployment Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- TOP NAVIGATION -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">DevOps Cloud Control</h1>
+                    <span class="brand-subtitle">Google Cloud Run • Spring Boot 3 • H2 DB</span>
+                </div>
+            </div>
+
+            <div class="nav-status">
+                <div class="status-pill status-online">
+                    <span class="pulse-dot"></span>
+                    <span>Cloud Run: Online (us-central1)</span>
+                </div>
+                <button class="btn btn-primary" id="open-modal-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>New Deployment</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTAINER -->
+        <main class="main-content">
+            <!-- METRICS SUMMARY CARDS -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Deployments</span>
+                        <div class="stat-icon icon-total">📊</div>
+                    </div>
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-footer">Database tracked items</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Active (Deployed)</span>
+                        <div class="stat-icon icon-success">🚀</div>
+                    </div>
+                    <div class="stat-value text-success" id="stat-deployed">0</div>
+                    <div class="stat-footer">Healthy & Serving traffic</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">In Progress</span>
+                        <div class="stat-icon icon-progress">⚡</div>
+                    </div>
+                    <div class="stat-value text-warning" id="stat-in-progress">0</div>
+                    <div class="stat-footer">Cloud Build compiling</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Pending Review</span>
+                        <div class="stat-icon icon-pending">⏳</div>
+                    </div>
+                    <div class="stat-value text-info" id="stat-pending">0</div>
+                    <div class="stat-footer">Awaiting promotion</div>
+                </div>
+            </section>
+
+            <!-- CONTROLS & FILTER BAR -->
+            <section class="controls-bar">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="search-input" placeholder="Search service, version, or environment...">
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-btn active" data-filter="ALL">All</button>
+                    <button class="filter-btn" data-filter="PROD">Prod</button>
+                    <button class="filter-btn" data-filter="STAGING">Staging</button>
+                    <button class="filter-btn" data-filter="DEV">Dev</button>
+                </div>
+
+                <button class="btn btn-secondary" id="refresh-btn" title="Refresh Data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span>Refresh</span>
+                </button>
+            </section>
+
+            <!-- DEPLOYMENTS TABLE -->
+            <section class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Service Name</th>
+                            <th>Version</th>
+                            <th>Environment</th>
+                            <th>Status</th>
+                            <th>Deployed By</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-table-body">
+                        <tr>
+                            <td colspan="8" class="loading-state">
+                                <div class="spinner"></div>
+                                <span>Loading deployments from H2 database...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <!-- CREATE / EDIT MODAL -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Create Deployment Task</h3>
+                <button class="modal-close-btn" id="close-modal-btn">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                
+                <div class="form-group">
+                    <label for="service-name">Service Name *</label>
+                    <input type="text" id="service-name" placeholder="e.g. payment-service" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="service-version">Version Tag *</label>
+                        <input type="text" id="service-version" placeholder="e.g. v1.2.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="service-env">Environment *</label>
+                        <select id="service-env" required>
+                            <option value="DEV">DEV</option>
+                            <option value="STAGING">STAGING</option>
+                            <option value="PROD">PROD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="service-status">Status *</label>
+                        <select id="service-status" required>
+                            <option value="PENDING">PENDING</option>
+                            <option value="IN_PROGRESS">IN_PROGRESS</option>
+                            <option value="DEPLOYED">DEPLOYED</option>
+                            <option value="FAILED">FAILED</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="service-deployer">Deployed By</label>
+                        <input type="text" id="service-deployer" placeholder="e.g. Cloud Build CI/CD">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-task-btn">Save Deployment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
