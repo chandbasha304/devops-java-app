@@ -17,7 +17,9 @@ public class HelloController {
     public ResponseEntity<Map<String, Object>> getGreeting() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "SUCCESS");
-        response.put("message", "Message from Feature Branch UI!");
+
+        response.put("message", "Standard Production API Message");
+
         response.put("version", "v1.0.0");
         response.put("timestamp", Instant.now().toString());
         return ResponseEntity.ok(response);
