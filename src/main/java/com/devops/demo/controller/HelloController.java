@@ -22,4 +22,13 @@ public class HelloController {
         response.put("timestamp", Instant.now().toString());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/info")
+    public ResponseEntity<Map<String, Object>> getAppInfo() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("appName", "devops-java-app");
+        response.put("environment", "development");
+        response.put("activeProfile", "default");
+        return ResponseEntity.ok(response);
+    }
 }
