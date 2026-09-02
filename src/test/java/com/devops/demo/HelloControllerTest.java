@@ -25,4 +25,12 @@ class HelloControllerTest {
                 .andExpect(jsonPath("$.message").value("Welcome to DevOps CI/CD Pipeline Lab!"))
                 .andExpect(jsonPath("$.version").value("v1.0.0"));
     }
+
+    @Test
+    void shouldReturnAppInfo() throws Exception {
+        mockMvc.perform(get("/api/v1/info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appName").value("devops-java-app"))
+                .andExpect(jsonPath("$.environment").value("development"));
+    }
 }
