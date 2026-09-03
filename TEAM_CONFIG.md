@@ -1,2 +1,2 @@
 # Team Configuration
-project.auth_mode = DEFAULT
+project.auth_mode = OAUTH2_GOOGLE_ALICE
