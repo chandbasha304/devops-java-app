@@ -18,8 +18,12 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - '--all-tags'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:$BUILD_ID'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:latest'
 
   # Step 4: Deploy container to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -37,6 +41,11 @@ steps:
       - '--allow-unauthenticated'
       - '--port'
       - '8080'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--cpu-boost'
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/devops-repo/devops-java-app:$BUILD_ID'

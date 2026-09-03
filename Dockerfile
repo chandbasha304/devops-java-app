@@ -10,10 +10,9 @@ RUN mvn clean package -DskipTests
 # Stage 2: Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-# Run as non-root user for security best practice
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 COPY --from=build /app/target/devops-java-app-1.0.0.jar app.jar
+ENV PORT=8080
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

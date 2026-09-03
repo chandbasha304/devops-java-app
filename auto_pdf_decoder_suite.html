@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generic PDF Stream Decoder & Text Extractor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        p.sub {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        .upload-area {
+            border: 1px dashed #94a3b8;
+            background: #f8fafc;
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 12px;
+            font-size: 0.82rem;
+            color: #475569;
+        }
+
+        .upload-area:hover {
+            background: #f1f5f9;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #0f172a;
+            background: #ffffff;
+            margin-bottom: 10px;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #3b82f6;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: #f1f5f9;
+            color: #0f172a;
+            cursor: pointer;
+        }
+
+        button.primary {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .status-line {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            color: #334155;
+        }
+
+        .extracted-box {
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #f8fafc;
+            padding: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .viewer-box {
+            height: 640px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #ffffff;
+        }
+
+        .empty-text {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Generic PDF Stream Decoder &amp; Text Extractor</h1>
+        <p class="sub">100% agnostic client-side parser. Zero hardcoded fields, zero domain assumptions, neutral styling.</p>
+    </header>
+
+    <div class="layout">
+        <!-- Left Panel: Input & Raw Extracted Text -->
+        <div class="panel">
+            <div class="panel-title">1. Input Stream / File</div>
+
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                Select or Drop Any .PDF File
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="handleFile(event)">
+            </div>
+
+            <textarea id="rawInput" placeholder="Paste Base64 encoded PDF string (JVBERi...) or raw PostScript %PDF-1.x stream text here..."></textarea>
+
+            <div class="btn-row">
+                <button class="primary" onclick="decodeAndExtract()">Decode &amp; Extract</button>
+                <button onclick="clearAll()">Clear</button>
+                <button id="downloadBtn" onclick="downloadPdf()" disabled>Download .PDF</button>
+            </div>
+
+            <div class="status-line" id="statusLine">Ready for input</div>
+
+            <div class="panel-title" style="margin-top: 8px;">2. Generic Extracted Text Stream (Pure PDF Content)</div>
+            <div class="extracted-box" id="extractedBox">No content extracted yet.</div>
+        </div>
+
+        <!-- Right Panel: Live Native PDF Viewport -->
+        <div class="panel">
+            <div class="panel-title">3. Document Viewport</div>
+            <div class="viewer-box" id="viewerBox">
+                <span class="empty-text">PDF preview will render here</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentBlob = null;
+    let currentBlobUrl = null;
+
+    // 1. Core Entry Point: Auto-detect & Parse
+    function decodeAndExtract() {
+        let input = document.getElementById('rawInput').value.trim();
+        if (!input) {
+            alert('Please provide input data or select a file.');
+            return;
+        }
+
+        // Detect Base64
+        if (input.startsWith('JVBERi') || (!input.startsWith('%PDF') && /^[A-Za-z0-9+/=\s_-]+$/.test(input.substring(0, 100)))) {
+            try {
+                const clean = input.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+                const binaryStr = atob(clean);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+                setStatus('Decoded Base64 stream (' + bytes.length + ' bytes)');
+                renderPdf(blob);
+                parseRawPdfText(binaryStr);
+            } catch (e) {
+                alert('Base64 decode error: ' + e.message);
+            }
+        } 
+        // Detect Raw PDF text
+        else if (input.startsWith('%PDF') || input.includes('%PDF-1.')) {
+            try {
+                const bytes = new Uint8Array(input.length);
+                for (let i = 0; i < input.length; i++) {
+                    bytes[i] = input.charCodeAt(i) & 0xff;
+                }
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+                setStatus('Reconstructed raw PDF stream (' + bytes.length + ' bytes)');
+                renderPdf(blob);
+                parseRawPdfText(input);
+            } catch (e) {
+                alert('Stream parse error: ' + e.message);
+            }
+        } else {
+            alert('Unrecognized format. Please paste valid Base64 or raw PDF stream.');
+        }
+    }
+
+    function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setStatus('Loaded file: ' + file.name + ' (' + file.size + ' bytes)');
+        renderPdf(file);
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            parseRawPdfText(evt.target.result);
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    function renderPdf(blob) {
+        currentBlob = blob;
+        if (currentBlobUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+        }
+        currentBlobUrl = URL.createObjectURL(blob);
+        document.getElementById('viewerBox').innerHTML = `<iframe src="${currentBlobUrl}#view=FitH"></iframe>`;
+        document.getElementById('downloadBtn').disabled = false;
+    }
+
+    function setStatus(msg) {
+        document.getElementById('statusLine').innerText = msg;
+    }
+
+    // 2. Pure ASCII85 Decoder (Agnostic)
+    function decodeAscii85(str) {
+        let clean = str.replace(/<~/g, '').replace(/~>/g, '').replace(/\s+/g, '');
+        let out = [];
+        let tuple = 0;
+        let count = 0;
+
+        for (let i = 0; i < clean.length; i++) {
+            let c = clean.charCodeAt(i);
+            if (c === 122 && count === 0) {
+                out.push(0, 0, 0, 0);
+                continue;
+            }
+            if (c >= 33 && c <= 117) {
+                tuple = tuple * 85 + (c - 33);
+                count++;
+                if (count === 5) {
+                    out.push((tuple >> 24) & 255, (tuple >> 16) & 255, (tuple >> 8) & 255, tuple & 255);
+                    tuple = 0;
+                    count = 0;
+                }
+            }
+        }
+
+        if (count > 1) {
+            for (let i = count; i < 5; i++) {
+                tuple = tuple * 85 + 84;
+            }
+            for (let i = 0; i < count - 1; i++) {
+                out.push((tuple >> (24 - i * 8)) & 255);
+            }
+        }
+
+        return new Uint8Array(out);
+    }
+
+    // 3. Decompress Deflate Stream using native browser DecompressionStream
+    async function decompressBytes(bytes) {
+        let data = bytes;
+        try {
+            const ds = new DecompressionStream('deflate');
+            const writer = ds.writable.getWriter();
+            writer.write(data);
+            writer.close();
+            const res = new Response(ds.readable);
+            const buf = await res.arrayBuffer();
+            return new Uint8Array(buf);
+        } catch (e) {
+            try {
+                if (data.length > 2 && data[0] === 0x78) {
+                    data = data.slice(2, data.length - 4);
+                }
+                const dsRaw = new DecompressionStream('deflate-raw');
+                const writer = dsRaw.writable.getWriter();
+                writer.write(data);
+                writer.close();
+                const res = new Response(dsRaw.readable);
+                const buf = await res.arrayBuffer();
+                return new Uint8Array(buf);
+            } catch (e2) {
+                return bytes;
+            }
+        }
+    }
+
+    // 4. 100% Generic PDF Stream Parser (No hardcoded keys, no dictionary assumptions)
+    async function parseRawPdfText(rawPdf) {
+        const outBox = document.getElementById('extractedBox');
+        outBox.innerText = "Parsing streams...";
+
+        let collectedLines = [];
+
+        // Scan all stream ... endstream blocks
+        const streamRegex = /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g;
+        let match;
+
+        while ((match = streamRegex.exec(rawPdf)) !== null) {
+            let body = match[1];
+            let bytes = null;
+
+            if (rawPdf.includes('ASCII85Decode') || body.includes('~>')) {
+                try {
+                    bytes = decodeAscii85(body);
+                } catch (e) {}
+            }
+
+            if (!bytes) {
+                bytes = new Uint8Array(body.length);
+                for (let i = 0; i < body.length; i++) {
+                    bytes[i] = body.charCodeAt(i) & 0xff;
+                }
+            }
+
+            if (rawPdf.includes('FlateDecode') || bytes[0] === 0x78) {
+                try {
+                    bytes = await decompressBytes(bytes);
+                } catch (e) {}
+            }
+
+            let textContent = '';
+            for (let i = 0; i < bytes.length; i++) {
+                textContent += String.fromCharCode(bytes[i]);
+            }
+
+            // Extract all PDF Text tokens: (string) Tj or [(array)] TJ
+            const textTokenRegex = /\(([^)]+)\)\s*Tj|\[([^\]]+)\]\s*TJ/g;
+            let tok;
+            let lineBuffer = '';
+
+            while ((tok = textTokenRegex.exec(textContent)) !== null) {
+                let piece = tok[1] || tok[2] || '';
+                let cleanPiece = piece.replace(/\\\(/g, '(').replace(/\\\)/g, ')').replace(/\\n/g, '\n').replace(/\(([^)]*)\)/g, '$1');
+                if (cleanPiece.trim()) {
+                    lineBuffer += cleanPiece + ' ';
+                }
+            }
+
+            if (lineBuffer.trim()) {
+                collectedLines.push(lineBuffer.trim());
+            }
+        }
+
+        // Fallback: extract literal strings from PDF objects directly
+        if (collectedLines.length === 0) {
+            const literalRegex = /\(([^)]{2,})\)/g;
+            let lit;
+            while ((lit = literalRegex.exec(rawPdf)) !== null) {
+                let txt = lit[1].replace(/\\\(/g, '(').replace(/\\\)/g, ')').trim();
+                if (txt && !txt.includes('unspecified') && !txt.includes('anonymous') && !txt.startsWith('D:')) {
+                    collectedLines.push(txt);
+                }
+            }
+        }
+
+        // Output Raw Extracted Text (Zero Hardcoded Fields)
+        if (collectedLines.length === 0) {
+            outBox.innerText = "No readable text streams found in PDF (file may be purely image/scanned).";
+        } else {
+            outBox.innerText = collectedLines.join('\n');
+        }
+    }
+
+    function downloadPdf() {
+        if (!currentBlobUrl) return;
+        const a = document.createElement('a');
+        a.href = currentBlobUrl;
+        a.download = "document.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function clearAll() {
+        document.getElementById('rawInput').value = '';
+        document.getElementById('extractedBox').innerText = 'No content extracted yet.';
+        document.getElementById('statusLine').innerText = 'Ready for input';
+        document.getElementById('viewerBox').innerHTML = '<span class="empty-text">PDF preview will render here</span>';
+        document.getElementById('downloadBtn').disabled = true;
+    }
+</script>
+
+</body>
+</html>

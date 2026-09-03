@@ -1,0 +1,96 @@
+import os
+import zlib
+import base64
+
+raw_pdf = """%PDF-1.4
+% ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 8 0 R /MediaBox [ 0 0 612 792 ] /Parent 7 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/PageMode /UseNone /Pages 7 0 R /Type /Catalog
+>>
+endobj
+6 0 obj
+<<
+/Author (\(anonymous\)) /CreationDate (D:20260903144349+05'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260903144349+05'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
+>>
+endobj
+7 0 obj
+<<
+/Count 1 /Kids [ 4 0 R ] /Type /Pages
+>>
+endobj
+8 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1072
+>>
+stream
+Gatm:?&tI7'Rf.GS>Rj=)Ij`XouIQg1.k(aGe.1[0/USjd,ngFUq?U"/!GWsViA=:3`<aS^cgl9M_CEJJqE[9jVkXlYYtbG+WnK&&WdYOde[SCmpQbI^8#SS^0-+Dh\/0ZkItmQLas0kk0^c'LT'Jd+P3hr%d'b#S>rN_]0)9KN']uh.54C,9p8"h*FXnP<#"rW66_>O>\7\n*Q`,`^P;Xfq*k\%[;K?-@XKio?d+O><c07tY>EU[mK^U;+AVq=ks`3t*\g9rbo57p7'p3"cX$?l<?^3OGO'"m@>mcY84<508m6A>DP*pEfmU9mlL"m`iK%jI("'12qXdsheI)K=maX)Pi\-5Kk$g(^n#T7`kSc&a5d<ZG,,F6b#]U8E6HA8l$PId&V]M5*LC1j$Ke"RkS>*"PnA\@edmL\B]$nC]r26QAi*78=?VK@2U'IT`US4p@6q2/A,G\HtM(^36Kr16$O)bh<Wu%pO`.r#HQQVhNe:4K5ISkb':6-$d)['Drd#]_oK^EjY;M%9k]a+gBlB@1cAWh2FWq=#bOku4P?s^;/o=!m?2HaFF0l,NL]m8u=_R?GU+'PT)G^H?.oisC\TB5GBMQZ:u-e\[o9T^DQ%/\O1o%j.`e`bg.'+cnd#hSYMSR#Z]Xk5M#Ea?N$Uhi-Rj]_[J)e>OPo"E?/Z"*\]h!&Tn#^TV`7doX2eY]h,_F@]fD222[f(\pRft;rjs)%IAp-)!BF).jQjCMD22s'>6qpeqa\hF5"ll,1)ES4?l6!Vr7pS@ItN0:b1'/g4cXtaUm+0E]IIro@_o/`=Nl"lJpd9EP]*"e0/@Ch]gZ_QEE`[GP/1Y:cR$f0TGMCnZ$\Sh9"$0>/O2jgs#Cec"A7H9$JLT7<qlK-m(qKVI4I79.'U?(>s>9krCC,jGsIQ1#uo?$@FBp-YHLq'],^0&<RF#sKoII;t(,Rc\SI5SP/_u4TI?MD@H>,_gWR-B;cT-NOnm'$Ed,j,9PcVQZqoRsO.LoT!UH3<H'Tn?+J)UO%0XTilT;l_-(OI^A#<+el,dCH<AquasU]mk/gqH)@b[:&q8F65@=~>endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000514 00000 n 
+0000000582 00000 n 
+0000000862 00000 n 
+0000000921 00000 n 
+trailer
+<<
+/ID 
+[<6842f76966f9d8c42b9315bc357bf875><6842f76966f9d8c42b9315bc357bf875>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 6 0 R
+/Root 5 0 R
+/Size 9
+>>
+startxref
+2084
+%%EOF"""
+
+# Save to disk as real valid PDF
+out_pdf_path = os.path.join(os.path.dirname(__file__), "extracted_sample_document.pdf")
+with open(out_pdf_path, "wb") as f:
+    f.write(raw_pdf.encode('latin1'))
+
+print(f"[+] Saved valid PDF to: {out_pdf_path}")
+
+# Extract ASCII85 and Zlib stream content
+ascii85_data = """Gatm:?&tI7'Rf.GS>Rj=)Ij`XouIQg1.k(aGe.1[0/USjd,ngFUq?U"/!GWsViA=:3`<aS^cgl9M_CEJJqE[9jVkXlYYtbG+WnK&&WdYOde[SCmpQbI^8#SS^0-+Dh\/0ZkItmQLas0kk0^c'LT'Jd+P3hr%d'b#S>rN_]0)9KN']uh.54C,9p8"h*FXnP<#"rW66_>O>\7\n*Q`,`^P;Xfq*k\%[;K?-@XKio?d+O><c07tY>EU[mK^U;+AVq=ks`3t*\g9rbo57p7'p3"cX$?l<?^3OGO'"m@>mcY84<508m6A>DP*pEfmU9mlL"m`iK%jI("'12qXdsheI)K=maX)Pi\-5Kk$g(^n#T7`kSc&a5d<ZG,,F6b#]U8E6HA8l$PId&V]M5*LC1j$Ke"RkS>*"PnA\@edmL\B]$nC]r26QAi*78=?VK@2U'IT`US4p@6q2/A,G\HtM(^36Kr16$O)bh<Wu%pO`.r#HQQVhNe:4K5ISkb':6-$d)['Drd#]_oK^EjY;M%9k]a+gBlB@1cAWh2FWq=#bOku4P?s^;/o=!m?2HaFF0l,NL]m8u=_R?GU+'PT)G^H?.oisC\TB5GBMQZ:u-e\[o9T^DQ%/\O1o%j.`e`bg.'+cnd#hSYMSR#Z]Xk5M#Ea?N$Uhi-Rj]_[J)e>OPo"E?/Z"*\]h!&Tn#^TV`7doX2eY]h,_F@]fD222[f(\pRft;rjs)%IAp-)!BF).jQjCMD22s'>6qpeqa\hF5"ll,1)ES4?l6!Vr7pS@ItN0:b1'/g4cXtaUm+0E]IIro@_o/`=Nl"lJpd9EP]*"e0/@Ch]gZ_QEE`[GP/1Y:cR$f0TGMCnZ$\Sh9"$0>/O2jgs#Cec"A7H9$JLT7<qlK-m(qKVI4I79.'U?(>s>9krCC,jGsIQ1#uo?$@FBp-YHLq'],^0&<RF#sKoII;t(,Rc\SI5SP/_u4TI?MD@H>,_gWR-B;cT-NOnm'$Ed,j,9PcVQZqoRsO.LoT!UH3<H'Tn?+J)UO%0XTilT;l_-(OI^A#<+el,dCH<AquasU]mk/gqH)@b[:&q8F65@=~>"""
+
+try:
+    a85_decoded = base64.a85decode(ascii85_data.strip().encode('ascii'))
+    zlib_decompressed = zlib.decompress(a85_decoded).decode('latin1', errors='ignore')
+    print("\n--- [DECODED TEXT INSIDE THIS PDF STREAM] ---")
+    print(zlib_decompressed[:800])
+except Exception as e:
+    print(f"Decode error: {e}")

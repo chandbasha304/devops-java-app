@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal PDF Viewer & Stream Reconstructor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #0b0f19;
+            --surface: #111827;
+            --card: #1f2937;
+            --border: #374151;
+            --primary: #3b82f6;
+            --accent: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f9fafb;
+            --muted: #9ca3af;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 950px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #93c5fd;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 18px;
+            transition: all 0.2s;
+        }
+
+        .upload-zone:hover {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: #60a5fa;
+        }
+
+        textarea {
+            width: 100%;
+            background: #030712;
+            border: 1px solid var(--border);
+            color: #38bdf8;
+            font-family: 'Fira Code', monospace;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            outline: none;
+            resize: vertical;
+            min-height: 160px;
+            margin-bottom: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .viewer-card {
+            min-height: 620px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .placeholder-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 600px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .alert-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Universal PDF Viewer &amp; Stream Reconstructor</h1>
+        <p class="subtitle">Upload any sample PDF directly, or reconstruct raw PDF streams.</p>
+    </div>
+
+    <div class="grid">
+        <!-- Control Panel -->
+        <div class="card">
+            <div class="section-title">📁 Method 1: Open Generated Sample PDF Directly</div>
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 1.8rem; margin-bottom: 6px;">📄</div>
+                <div style="font-weight: 600; color: #93c5fd;">Click to Select Any .PDF File</div>
+                <div style="font-size: 0.8rem; color: var(--muted);">Select from <code>sample_pdfs/</code> folder</div>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
+            </div>
+
+            <div class="section-title">📝 Method 2: Paste Raw PDF Stream or Base64</div>
+            <textarea id="pdfRawInput" placeholder="Paste full %PDF-1.4 stream or Base64 string here..."></textarea>
+            
+            <div class="btn-group">
+                <button class="btn" onclick="renderRawStream()">📄 Parse &amp; Render</button>
+                <button class="btn btn-success" id="downloadBtn" onclick="downloadCurrentPDF()" disabled>💾 Download .PDF</button>
+            </div>
+
+            <div class="alert-box">
+                💡 <strong>Why "Failed to Load" happens:</strong> Raw PDF text contains binary compression (zlib streams). Copy-pasting text from a terminal corrupts non-printable binary characters or truncates the <code>%%EOF</code> footer. Using <strong>Method 1 (File Upload)</strong> or Postman's <strong>"Send and Download"</strong> avoids all corruption!
+            </div>
+        </div>
+
+        <!-- Visual Viewer Panel -->
+        <div class="card viewer-card">
+            <div class="section-title">🖥️ Live PDF Visual Output</div>
+            <div id="viewerContainer">
+                <div class="placeholder-box">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">📑</div>
+                    <h3>No PDF Loaded Yet</h3>
+                    <p>Select a file from <code>sample_pdfs/</code> or paste full stream on the left.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentBlobUrl = null;
+    let currentBlob = null;
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        displayBlob(file);
+    }
+
+    function renderRawStream() {
+        let raw = document.getElementById('pdfRawInput').value.trim();
+        if (!raw) {
+            alert('Please paste the PDF data!');
+            return;
+        }
+
+        // Check if Base64 encoded
+        if (raw.startsWith('JVBERi0') || (!raw.startsWith('%PDF') && /^[A-Za-z0-9+/=]+$/.test(raw.substring(0, 100)))) {
+            try {
+                const byteCharacters = atob(raw.replace(/\s+/g, ''));
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                displayBlob(blob);
+                return;
+            } catch (e) {
+                console.error("Base64 decode failed, falling back to raw binary parser", e);
+            }
+        }
+
+        // Parse as raw binary stream
+        const len = raw.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = raw.charCodeAt(i) & 0xff;
+        }
+
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        displayBlob(blob);
+    }
+
+    function displayBlob(blob) {
+        currentBlob = blob;
+        if (currentBlobUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+        }
+        currentBlobUrl = URL.createObjectURL(blob);
+
+        const container = document.getElementById('viewerContainer');
+        container.innerHTML = `<iframe class="pdf-frame" src="${currentBlobUrl}#view=FitH"></iframe>`;
+        document.getElementById('downloadBtn').disabled = false;
+    }
+
+    function downloadCurrentPDF() {
+        if (!currentBlobUrl) return;
+        const a = document.createElement('a');
+        a.href = currentBlobUrl;
+        a.download = "viewed_document.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>
+
+</body>
+</html>

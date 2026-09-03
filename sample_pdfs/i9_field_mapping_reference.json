@@ -1,0 +1,59 @@
+{
+  "form_metadata": {
+    "form_name": "USCIS Form I-9 Employment Eligibility Verification",
+    "edition_date": "01/20/25",
+    "expiration_date": "05/31/2027",
+    "omb_number": "1615-0047"
+  },
+  "section_1_employee_information": {
+    "last_name": "Smith",
+    "first_name": "John",
+    "middle_initial": "A",
+    "other_last_names": "N/A",
+    "address_street_and_number": "123 Innovation Way",
+    "apt_number": "Apt 4B",
+    "city_or_town": "San Jose",
+    "state": "CA",
+    "zip_code": "95112",
+    "date_of_birth": "05/14/1992",
+    "ssn": "123-45-6789",
+    "employee_email": "john.smith@example.com",
+    "employee_telephone": "408-555-0199",
+    "citizenship_status": {
+      "selected_box": 1,
+      "status_description": "A citizen of the United States",
+      "uscis_a_number": null,
+      "form_i94_admission_number": null,
+      "foreign_passport_number": null,
+      "foreign_passport_country": null
+    },
+    "signature_date": "09/03/2026"
+  },
+  "section_2_employer_verification": {
+    "verification_mode": "LIST_A",
+    "list_a_document": {
+      "document_title": "U.S. Passport",
+      "issuing_authority": "U.S. Department of State",
+      "document_number": "A12345678",
+      "expiration_date": "08/14/2034"
+    },
+    "list_b_document_alternative": {
+      "document_title": "Driver's License",
+      "issuing_authority": "California DMV",
+      "document_number": "D9876543",
+      "expiration_date": "05/14/2029"
+    },
+    "list_c_document_alternative": {
+      "document_title": "Social Security Card",
+      "issuing_authority": "Social Security Administration",
+      "document_number": "123-45-6789",
+      "expiration_date": "N/A"
+    },
+    "first_day_of_employment": "09/01/2026",
+    "employer_representative_name": "Williams, Sarah",
+    "employer_representative_title": "HR Director",
+    "employer_business_name": "CloudTech Solutions Inc.",
+    "employer_business_address": "500 Tech Parkway, Suite 200, San Jose, CA 95110",
+    "employer_signature_date": "09/03/2026"
+  }
+}
